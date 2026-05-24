@@ -20,7 +20,10 @@ client.on('guildMemberAdd', async (member) => {
   const channel = member.guild.channels.cache.get(process.env.CHANNEL_ID);
   if (!channel) return;
 
-  channel.send(`👋 Добре дошъл/ла, ${member}, в Ivchou's Community!`);
+  channel.send(`🎉 **Добре дошъл/ла, ${member}, в Ivchou's Community!**
+
+Влез и се забавлявай с нас. Ти си **${member.guild.memberCount}-ят член** на сървъра! 🔥
+За да имаш достъп до всички канали погледни <#1504460243441029203> !`);
 });
 
 client.login(process.env.TOKEN);
