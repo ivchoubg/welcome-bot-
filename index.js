@@ -1,4 +1,9 @@
+const express = require('express');
 const { Client, GatewayIntentBits } = require('discord.js');
+
+const app = express();
+app.get('/', (req, res) => res.send('Bot is alive'));
+app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
 
 const client = new Client({
   intents: [
