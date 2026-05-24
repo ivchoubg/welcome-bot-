@@ -12,15 +12,22 @@ const client = new Client({
   ]
 });
 
+const welcomedUsers = new Set();
+
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
 client.on('guildMemberAdd', async (member) => {
+  if (welcomedUsers.has(member.id)) return;
+
+  welcomedUsers.add(member.id);
+  setTimeout(() => welcomedUsers.delete(member.id), 60000);
+
   const channel = member.guild.channels.cache.get(process.env.CHANNEL_ID);
   if (!channel) return;
 
-  channel.send(`🎉 **Добре дошъл/ла, ${member}, в Ivchou's Community!**
+  await channel.send(`🎉 **Добре дошъл/ла, ${member}, в Ivchou's Community!**
 
 Влез и се забавлявай с нас. Ти си **${member.guild.memberCount}-ят член** на сървъра! 🔥
 За да имаш достъп до всички канали погледни <#1504460243441029203> !`);
