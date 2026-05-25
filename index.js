@@ -15,6 +15,11 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [{ name: 'Helping Ivchouu_', type: 0 }],
+    status: 'online'
+  });
 });
 
 client.on('guildMemberAdd', async (member) => {
@@ -23,9 +28,6 @@ client.on('guildMemberAdd', async (member) => {
 
   const canvas = createCanvas(900, 300);
   const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = '#17121f';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = '#2b2140';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
