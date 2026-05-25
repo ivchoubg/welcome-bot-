@@ -28,7 +28,7 @@ client.on('guildMemberAdd', async (member) => {
   if (!channel) return;
 
   await channel.send(`🎉 **Добре дошъл/ла, ${member}, в Ivchou's Community!**
-**Влез и се забавлявай с нас. Ти си **${member.guild.memberCount}-ят член** на сървъра! 🔥**
+**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**
 **За да имаш достъп до всички канали погледни <#1504460243441029203> !**`);
 });
 
