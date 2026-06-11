@@ -102,23 +102,33 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const image = new Jimp(900, 300, 0x241b35ff);
+    const image = new Jimp(900, 300, 0x1b102bff);
 
-    drawRect(image, 15, 15, 870, 270, 0x7b3cffff, 6);
+    // Main card
+    drawRect(image, 20, 20, 860, 260, 0x8c52ffff, 6);
+    drawRect(image, 35, 35, 830, 230, 0x3d2366ff, 2);
+
+    // Decorative bars
+    drawRect(image, 310, 78, 470, 4, 0x8c52ffff, 4);
+    drawRect(image, 310, 220, 390, 3, 0x8c52ffff, 3);
 
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(170, 170);
+    avatar.resize(150, 150);
 
-    drawRect(image, 62, 57, 186, 186, 0x8c52ffff, 8);
-    image.composite(avatar, 70, 65);
+    // Avatar frame
+    drawRect(image, 75, 65, 170, 170, 0x8c52ffff, 6);
+    drawRect(image, 85, 75, 150, 150, 0x000000ff, 4);
+    image.composite(avatar, 85, 75);
 
     const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontMedium = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
 
-    image.print(fontBig, 300, 55, 'Welcome to', 560);
-    image.print(fontMedium, 300, 135, member.guild.name, 560);
-    image.print(fontMedium, 300, 205, `Member ${member.guild.memberCount}`, 560);
+    image.print(fontBig, 310, 55, 'Welcome to', 540);
+    image.print(fontMedium, 315, 140, member.guild.name, 520);
+    image.print(fontMedium, 315, 200, `Member ${member.guild.memberCount}`, 520);
+    image.print(fontSmall, 730, 250, 'Ivcho-Welcomer', 130);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
