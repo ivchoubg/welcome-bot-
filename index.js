@@ -1,6 +1,6 @@
 const express = require('express');
 const fs = require('fs');
-const sharp = require('sharp');
+const Jimp = require('jimp');
 const {
   Client,
   GatewayIntentBits,
@@ -27,19 +27,17 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
-function escapeXml(text) {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-async function imageToBase64(url) {
-  const res = await fetch(url);
-  const buffer = Buffer.from(await res.arrayBuffer());
-  return buffer.toString('base64');
+function drawRect(img, x, y, w, h, color, thickness = 4) {
+  for (let i = 0; i < thickness; i++) {
+    for (let xx = x; xx < x + w; xx++) {
+      img.setPixelColor(color, xx, y + i);
+      img.setPixelColor(color, xx, y + h - 1 - i);
+    }
+    for (let yy = y; yy < y + h; yy++) {
+      img.setPixelColor(color, x + i, yy);
+      img.setPixelColor(color, x + w - 1 - i, yy);
+    }
+  }
 }
 
 let welcomeChannels = loadSettings();
@@ -104,36 +102,27 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
+    const image = new Jimp(900, 300, 0x241b35ff);
+
+    drawRect(image, 15, 15, 870, 270, 0x7b3cffff, 6);
+
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
-    const avatarBase64 = await imageToBase64(avatarUrl);
+    const avatar = await Jimp.read(avatarUrl);
+    avatar.resize(170, 170);
 
-    const serverName = escapeXml(member.guild.name);
-    const memberCount = member.guild.memberCount;
+    drawRect(image, 62, 57, 186, 186, 0x8c52ffff, 8);
+    image.composite(avatar, 70, 65);
 
-    const svg = `
-      <svg width="900" height="300" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <clipPath id="avatarClip">
-            <circle cx="155" cy="150" r="85"/>
-          </clipPath>
-        </defs>
+    const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    const fontMedium = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-        <rect width="900" height="300" fill="#241b35"/>
-        <rect x="15" y="15" width="870" height="270" rx="8" fill="none" stroke="#7b3cff" stroke-width="6"/>
+    image.print(fontBig, 300, 55, 'Welcome to', 560);
+    image.print(fontMedium, 300, 135, member.guild.name, 560);
+    image.print(fontMedium, 300, 205, `Member ${member.guild.memberCount}`, 560);
 
-        <circle cx="155" cy="150" r="92" fill="#8c52ff"/>
-        <circle cx="155" cy="150" r="86" fill="#111111"/>
-        <image href="data:image/png;base64,${avatarBase64}" x="70" y="65" width="170" height="170" clip-path="url(#avatarClip)"/>
+    const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
-        <text x="300" y="105" font-family="DejaVu Sans" font-size="52" font-weight="700" fill="#ffffff">Welcome to</text>
-        <text x="300" y="165" font-family="DejaVu Sans" font-size="42" font-weight="700" fill="#8c52ff">${serverName}</text>
-        <text x="300" y="220" font-family="DejaVu Sans" font-size="34" fill="#dddddd">Member ${memberCount}</text>
-      </svg>
-    `;
-
-    const imageBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
-
-    const attachment = new AttachmentBuilder(imageBuffer, {
+    const attachment = new AttachmentBuilder(buffer, {
       name: 'welcome.png'
     });
 
