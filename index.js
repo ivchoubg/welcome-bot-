@@ -94,42 +94,49 @@ client.on('guildMemberAdd', async (member) => {
     const canvas = createCanvas(900, 300);
     const ctx = canvas.getContext('2d');
 
+    // Background
     ctx.fillStyle = '#241b35';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, 900, 300);
 
+    // Border
     ctx.strokeStyle = '#7b3cff';
     ctx.lineWidth = 6;
-    ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+    ctx.strokeRect(15, 15, 870, 270);
 
+    // Avatar
     const avatar = await loadImage(
       member.user.displayAvatarURL({ extension: 'png', size: 256 })
     );
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(155, 150, 85, 0, Math.PI * 2, true);
+    ctx.arc(155, 150, 85, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
     ctx.drawImage(avatar, 70, 65, 170, 170);
     ctx.restore();
 
+    // Avatar border
     ctx.strokeStyle = '#8c52ff';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 7;
     ctx.beginPath();
-    ctx.arc(155, 150, 88, 0, Math.PI * 2, true);
+    ctx.arc(155, 150, 88, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Text
+    ctx.textBaseline = 'top';
+
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 46px Arial';
-    ctx.fillText('Welcome to', 300, 120);
+    ctx.font = 'bold 52px sans-serif';
+    ctx.fillText('Welcome to', 300, 70);
 
     ctx.fillStyle = '#8c52ff';
-    ctx.font = 'bold 42px Arial';
-    ctx.fillText(`${member.guild.name}!`, 300, 175);
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillText(member.guild.name, 300, 135, 560);
 
     ctx.fillStyle = '#dddddd';
-    ctx.font = '30px Arial';
-    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 225);
+    ctx.font = '34px sans-serif';
+    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
 
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {
       name: 'welcome.png'
