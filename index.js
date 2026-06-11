@@ -7,7 +7,9 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSansBold');
+GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'DejaVuSans');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
@@ -128,17 +130,15 @@ client.on('guildMemberAdd', async (member) => {
     ctx.textBaseline = 'top';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px Arial';
+    ctx.font = '52px DejaVuSansBold';
     ctx.fillText('Welcome to', 300, 70);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 80px Arial';
-    ctx.fillText('TEST', 300, 150);
+  
     ctx.fillStyle = '#8c52ff';
-    ctx.font = 'bold 44px Arial';
+    ctx.font = '44px DejaVuSansBold';
     ctx.fillText(member.guild.name, 300, 135, 560);
 
     ctx.fillStyle = '#dddddd';
-    ctx.font = '34px Arial';
+    ctx.font = '34px DejaVuSans';
     ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
 
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {
