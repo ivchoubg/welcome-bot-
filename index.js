@@ -59,7 +59,7 @@ client.on('interactionCreate', async (interaction) => {
     saveSettings(welcomeChannels);
 
     await interaction.reply({
-      content: `✅ Welcome системата е настроена за ${interaction.channel}.`,
+      content: `✅ Welcome системата е настроена за <#${interaction.channelId}>.`,
       ephemeral: true
     });
   }
