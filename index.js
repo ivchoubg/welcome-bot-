@@ -122,48 +122,33 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x241b35ff);
 
-    // Border / card
+    // Main border like Invite Tracker
     drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 6);
 
     // Avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(155, 155);
+    avatar.resize(145, 145);
     makeCircle(avatar);
 
-    const avatarFrame = new Jimp(175, 175, 0xffffffff);
-    makeCircle(avatarFrame);
+    const avatarWhite = new Jimp(170, 170, 0xffffffff);
+    makeCircle(avatarWhite);
 
-    const avatarPurple = new Jimp(165, 165, 0x8c52ffff);
-    makeCircle(avatarPurple);
+    const avatarDark = new Jimp(158, 158, 0x241b35ff);
+    makeCircle(avatarDark);
 
-    image.composite(avatarFrame, 55, 62);
-    image.composite(avatarPurple, 60, 67);
-    image.composite(avatar, 65, 72);
+    image.composite(avatarWhite, 58, 65);
+    image.composite(avatarDark, 64, 71);
+    image.composite(avatar, 70, 77);
 
     // Fonts
     const fontName = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    const username = member.user.username;
-    const serverName = member.guild.name;
-    const memberCount = member.guild.memberCount;
-
-    // Text layout like Invite Tracker
-    image.print(fontName, 270, 65, {
-      text: username,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 570, 70);
-
-    image.print(fontText, 270, 145, {
-      text: `Welcome to ${serverName}!`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 570, 45);
-
-    image.print(fontText, 270, 195, {
-      text: `Member ${memberCount}`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 570, 45);
+    // Text like Invite Tracker
+    image.print(fontName, 260, 58, member.user.username, 590);
+    image.print(fontText, 260, 140, `Welcome to ${member.guild.name}!`, 590);
+    image.print(fontText, 260, 192, `Member ${member.guild.memberCount}`, 590);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
