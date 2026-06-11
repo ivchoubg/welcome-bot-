@@ -40,6 +40,24 @@ function drawRect(img, x, y, w, h, color, thickness = 4) {
   }
 }
 
+function makeCircle(img) {
+  const w = img.bitmap.width;
+  const h = img.bitmap.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = Math.min(w, h) / 2;
+
+  img.scan(0, 0, w, h, function (x, y, idx) {
+    const dx = x - cx;
+    const dy = y - cy;
+    if (Math.sqrt(dx * dx + dy * dy) > r) {
+      this.bitmap.data[idx + 3] = 0;
+    }
+  });
+
+  return img;
+}
+
 let welcomeChannels = loadSettings();
 
 const client = new Client({
@@ -105,30 +123,35 @@ client.on('guildMemberAdd', async (member) => {
     const image = new Jimp(900, 300, 0x1b102bff);
 
     // Main card
-    drawRect(image, 20, 20, 860, 260, 0x8c52ffff, 6);
-    drawRect(image, 35, 35, 830, 230, 0x3d2366ff, 2);
+    drawRect(image, 25, 25, 850, 250, 0x8c52ffff, 6);
+    drawRect(image, 42, 42, 816, 216, 0x3b225fff, 2);
 
-    // Decorative bars
-    drawRect(image, 310, 78, 470, 4, 0x8c52ffff, 4);
-    drawRect(image, 310, 220, 390, 3, 0x8c52ffff, 3);
-
+    // Avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
     avatar.resize(150, 150);
+    makeCircle(avatar);
 
-    // Avatar frame
-    drawRect(image, 75, 65, 170, 170, 0x8c52ffff, 6);
-    drawRect(image, 85, 75, 150, 150, 0x000000ff, 4);
-    image.composite(avatar, 85, 75);
+    const avatarBg = new Jimp(172, 172, 0x8c52ffff);
+    makeCircle(avatarBg);
 
+    const avatarInner = new Jimp(160, 160, 0x111111ff);
+    makeCircle(avatarInner);
+
+    image.composite(avatarBg, 75, 64);
+    image.composite(avatarInner, 81, 70);
+    image.composite(avatar, 86, 75);
+
+    // Fonts
     const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontMedium = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
     const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
 
-    image.print(fontBig, 310, 55, 'Welcome to', 540);
-    image.print(fontMedium, 315, 140, member.guild.name, 520);
-    image.print(fontMedium, 315, 200, `Member ${member.guild.memberCount}`, 520);
-    image.print(fontSmall, 730, 250, 'Ivcho-Welcomer', 130);
+    // Text - spaced better
+    image.print(fontBig, 300, 55, 'Welcome to', 540);
+    image.print(fontMedium, 305, 135, member.guild.name, 520);
+    image.print(fontMedium, 305, 195, `Member ${member.guild.memberCount}`, 520);
+    image.print(fontSmall, 730, 247, 'Ivcho-Welcomer', 130);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
