@@ -120,38 +120,50 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const image = new Jimp(900, 300, 0x1b102bff);
+    const image = new Jimp(900, 300, 0x241b35ff);
 
-    // Main card
-    drawRect(image, 25, 25, 850, 250, 0x8c52ffff, 6);
-    drawRect(image, 42, 42, 816, 216, 0x3b225fff, 2);
+    // Border / card
+    drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 6);
 
     // Avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(150, 150);
+    avatar.resize(155, 155);
     makeCircle(avatar);
 
-    const avatarBg = new Jimp(172, 172, 0x8c52ffff);
-    makeCircle(avatarBg);
+    const avatarFrame = new Jimp(175, 175, 0xffffffff);
+    makeCircle(avatarFrame);
 
-    const avatarInner = new Jimp(160, 160, 0x111111ff);
-    makeCircle(avatarInner);
+    const avatarPurple = new Jimp(165, 165, 0x8c52ffff);
+    makeCircle(avatarPurple);
 
-    image.composite(avatarBg, 75, 64);
-    image.composite(avatarInner, 81, 70);
-    image.composite(avatar, 86, 75);
+    image.composite(avatarFrame, 55, 62);
+    image.composite(avatarPurple, 60, 67);
+    image.composite(avatar, 65, 72);
 
     // Fonts
-    const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-    const fontMedium = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-    const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    // Text - spaced better
-    image.print(fontBig, 300, 55, 'Welcome to', 540);
-    image.print(fontMedium, 305, 135, member.guild.name, 520);
-    image.print(fontMedium, 305, 195, `Member ${member.guild.memberCount}`, 520);
-    image.print(fontSmall, 730, 247, 'Ivcho-Welcomer', 130);
+    const username = member.user.username;
+    const serverName = member.guild.name;
+    const memberCount = member.guild.memberCount;
+
+    // Text layout like Invite Tracker
+    image.print(fontName, 270, 65, {
+      text: username,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
+    }, 570, 70);
+
+    image.print(fontText, 270, 145, {
+      text: `Welcome to ${serverName}!`,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
+    }, 570, 45);
+
+    image.print(fontText, 270, 195, {
+      text: `Member ${memberCount}`,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
+    }, 570, 45);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
