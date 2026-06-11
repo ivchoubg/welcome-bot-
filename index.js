@@ -4,8 +4,10 @@ const {
   Client,
   GatewayIntentBits,
   SlashCommandBuilder,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  AttachmentBuilder
 } = require('discord.js');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
@@ -84,19 +86,58 @@ client.on('guildMemberAdd', async (member) => {
 
   try {
     const channelId = welcomeChannels[member.guild.id];
-    console.log(`Saved welcome channel: ${channelId}`);
-
     if (!channelId) return;
 
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
+    if (!channel) return;
 
-    if (!channel) {
-      console.log('Welcome channel not found.');
-      return;
-    }
+    const canvas = createCanvas(900, 300);
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#241b35';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#7b3cff';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+    const avatar = await loadImage(
+      member.user.displayAvatarURL({ extension: 'png', size: 256 })
+    );
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(155, 150, 85, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatar, 70, 65, 170, 170);
+    ctx.restore();
+
+    ctx.strokeStyle = '#8c52ff';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(155, 150, 88, 0, Math.PI * 2, true);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 46px Arial';
+    ctx.fillText('Welcome to', 300, 120);
+
+    ctx.fillStyle = '#8c52ff';
+    ctx.font = 'bold 42px Arial';
+    ctx.fillText(`${member.guild.name}!`, 300, 175);
+
+    ctx.fillStyle = '#dddddd';
+    ctx.font = '30px Arial';
+    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 225);
+
+    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
+      name: 'welcome.png'
+    });
 
     await channel.send({
-      content: `✨ Добре дошъл/ла, ${member}, в **${member.guild.name}**!\n**Вече сме ${member.guild.memberCount} човека! 🔥**`
+     content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
+      files: [attachment]
     });
 
     console.log('Welcome message sent.');
