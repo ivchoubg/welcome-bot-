@@ -117,10 +117,8 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x241b35ff);
 
-    // Border
     drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 5);
 
-    // Avatar circle
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
     avatar.resize(140, 140);
@@ -136,19 +134,20 @@ client.on('guildMemberAdd', async (member) => {
     image.composite(darkCircle, 65, 75);
     image.composite(avatar, 70, 80);
 
-    // Fonts
     const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    // Text like Invite Tracker, без username
-    image.print(fontBig, 260, 55, 'Welcome to', 590);
+    const serverName = member.guild.name.toUpperCase();
+    const memberCount = member.guild.memberCount;
 
-    image.print(fontText, 260, 135, {
-      text: member.guild.name,
+    image.print(fontBig, 260, 52, 'WELCOME TO', 590);
+
+    image.print(fontText, 260, 132, {
+      text: serverName,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 70);
 
-    image.print(fontText, 260, 215, `Member ${member.guild.memberCount}`, 590);
+    image.print(fontText, 260, 218, `MEMBER ${memberCount}`, 590);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
