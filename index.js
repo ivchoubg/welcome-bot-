@@ -127,15 +127,15 @@ client.on('guildMemberAdd', async (member) => {
     ctx.textBaseline = 'top';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px sans-serif';
+    ctx.font = 'bold 52px Arial';
     ctx.fillText('Welcome to', 300, 70);
 
     ctx.fillStyle = '#8c52ff';
-    ctx.font = 'bold 44px sans-serif';
+    ctx.font = 'bold 44px Arial';
     ctx.fillText(member.guild.name, 300, 135, 560);
 
     ctx.fillStyle = '#dddddd';
-    ctx.font = '34px sans-serif';
+    ctx.font = '34px Arial';
     ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
 
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {
