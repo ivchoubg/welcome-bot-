@@ -7,9 +7,7 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
-GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSansBold');
-GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'DejaVuSans');
+const { createCanvas, loadImage } = require('canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
@@ -84,8 +82,6 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.on('guildMemberAdd', async (member) => {
-  console.log(`New member joined: ${member.user.tag}`);
-
   try {
     const channelId = welcomeChannels[member.guild.id];
     if (!channelId) return;
@@ -96,16 +92,13 @@ client.on('guildMemberAdd', async (member) => {
     const canvas = createCanvas(900, 300);
     const ctx = canvas.getContext('2d');
 
-    // Background
     ctx.fillStyle = '#241b35';
     ctx.fillRect(0, 0, 900, 300);
 
-    // Border
     ctx.strokeStyle = '#7b3cff';
     ctx.lineWidth = 6;
     ctx.strokeRect(15, 15, 870, 270);
 
-    // Avatar
     const avatar = await loadImage(
       member.user.displayAvatarURL({ extension: 'png', size: 256 })
     );
@@ -118,30 +111,27 @@ client.on('guildMemberAdd', async (member) => {
     ctx.drawImage(avatar, 70, 65, 170, 170);
     ctx.restore();
 
-    // Avatar border
     ctx.strokeStyle = '#8c52ff';
     ctx.lineWidth = 7;
     ctx.beginPath();
     ctx.arc(155, 150, 88, 0, Math.PI * 2);
-    ctx.stroke(); 
-    
+    ctx.stroke();
 
-    // Text
     ctx.textBaseline = 'top';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '52px DejaVuSansBold';
+    ctx.font = 'bold 52px Arial';
     ctx.fillText('Welcome to', 300, 70);
-  
+
     ctx.fillStyle = '#8c52ff';
-    ctx.font = '44px DejaVuSansBold';
+    ctx.font = 'bold 44px Arial';
     ctx.fillText(member.guild.name, 300, 135, 560);
 
     ctx.fillStyle = '#dddddd';
-    ctx.font = '34px DejaVuSans';
+    ctx.font = '34px Arial';
     ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
 
-    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
+    const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), {
       name: 'welcome.png'
     });
 
