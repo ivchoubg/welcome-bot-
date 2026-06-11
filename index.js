@@ -122,8 +122,7 @@ client.on('guildMemberAdd', async (member) => {
     ctx.beginPath();
     ctx.arc(155, 150, 88, 0, Math.PI * 2);
     ctx.stroke(); 
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(300, 50, 300, 100);
+    
 
     // Text
     ctx.textBaseline = 'top';
