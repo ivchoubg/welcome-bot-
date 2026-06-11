@@ -7,9 +7,7 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
-GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSansBold');
-GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'DejaVuSans');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
@@ -119,23 +117,25 @@ client.on('guildMemberAdd', async (member) => {
     ctx.arc(155, 150, 88, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.textBaseline = 'top';
+    // IMPORTANT: text rendering fix for @napi-rs/canvas
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px Arial';
-    ctx.fillText('Welcome to', 300, 70);
+    ctx.font = 'bold 52px serif';
+    ctx.fillText('Welcome to', 300, 120);
 
     ctx.fillStyle = '#8c52ff';
-    ctx.font = 'bold 44px Arial';
-    ctx.fillText(member.guild.name, 300, 135, 560);
+    ctx.font = 'bold 42px serif';
+    ctx.fillText(member.guild.name, 300, 175, 560);
 
     ctx.fillStyle = '#dddddd';
-    ctx.font = '34px Arial';
-    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
+    ctx.font = '34px serif';
+    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 230);
 
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {
-  name: 'welcome.png'
-});
+      name: 'welcome.png'
+    });
 
     await channel.send({
       content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
