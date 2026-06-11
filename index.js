@@ -125,9 +125,9 @@ client.on('guildMemberAdd', async (member) => {
         <circle cx="155" cy="150" r="86" fill="#111111"/>
         <image href="data:image/png;base64,${avatarBase64}" x="70" y="65" width="170" height="170" clip-path="url(#avatarClip)"/>
 
-        <text x="300" y="105" font-family="Arial, DejaVu Sans, sans-serif" font-size="52" font-weight="700" fill="#ffffff">Welcome to</text>
-        <text x="300" y="165" font-family="Arial, DejaVu Sans, sans-serif" font-size="42" font-weight="700" fill="#8c52ff">${serverName}</text>
-        <text x="300" y="220" font-family="Arial, DejaVu Sans, sans-serif" font-size="34" fill="#dddddd">Member ${memberCount}</text>
+        <text x="300" y="105" font-family="DejaVu Sans" font-size="52" font-weight="700" fill="#ffffff">Welcome to</text>
+        <text x="300" y="165" font-family="DejaVu Sans" font-size="42" font-weight="700" fill="#8c52ff">${serverName}</text>
+        <text x="300" y="220" font-family="DejaVu Sans" font-size="34" fill="#dddddd">Member ${memberCount}</text>
       </svg>
     `;
 
