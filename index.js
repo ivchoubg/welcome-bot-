@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const sharp = require('sharp');
 const {
   Client,
   GatewayIntentBits,
@@ -7,7 +8,6 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
@@ -25,6 +25,21 @@ function loadSettings() {
 
 function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+function escapeXml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+async function imageToBase64(url) {
+  const res = await fetch(url);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  return buffer.toString('base64');
 }
 
 let welcomeChannels = loadSettings();
@@ -89,51 +104,36 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const canvas = createCanvas(900, 300);
-    const ctx = canvas.getContext('2d');
+    const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
+    const avatarBase64 = await imageToBase64(avatarUrl);
 
-    ctx.fillStyle = '#241b35';
-    ctx.fillRect(0, 0, 900, 300);
+    const serverName = escapeXml(member.guild.name);
+    const memberCount = member.guild.memberCount;
 
-    ctx.strokeStyle = '#7b3cff';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(15, 15, 870, 270);
+    const svg = `
+      <svg width="900" height="300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="avatarClip">
+            <circle cx="155" cy="150" r="85"/>
+          </clipPath>
+        </defs>
 
-    const avatar = await loadImage(
-      member.user.displayAvatarURL({ extension: 'png', size: 256 })
-    );
+        <rect width="900" height="300" fill="#241b35"/>
+        <rect x="15" y="15" width="870" height="270" rx="8" fill="none" stroke="#7b3cff" stroke-width="6"/>
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(155, 150, 85, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(avatar, 70, 65, 170, 170);
-    ctx.restore();
+        <circle cx="155" cy="150" r="92" fill="#8c52ff"/>
+        <circle cx="155" cy="150" r="86" fill="#111111"/>
+        <image href="data:image/png;base64,${avatarBase64}" x="70" y="65" width="170" height="170" clip-path="url(#avatarClip)"/>
 
-    ctx.strokeStyle = '#8c52ff';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.arc(155, 150, 88, 0, Math.PI * 2);
-    ctx.stroke();
+        <text x="300" y="105" font-family="Arial, DejaVu Sans, sans-serif" font-size="52" font-weight="700" fill="#ffffff">Welcome to</text>
+        <text x="300" y="165" font-family="Arial, DejaVu Sans, sans-serif" font-size="42" font-weight="700" fill="#8c52ff">${serverName}</text>
+        <text x="300" y="220" font-family="Arial, DejaVu Sans, sans-serif" font-size="34" fill="#dddddd">Member ${memberCount}</text>
+      </svg>
+    `;
 
-    // IMPORTANT: text rendering fix for @napi-rs/canvas
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
+    const imageBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px serif';
-    ctx.fillText('Welcome to', 300, 120);
-
-    ctx.fillStyle = '#8c52ff';
-    ctx.font = 'bold 42px serif';
-    ctx.fillText(member.guild.name, 300, 175, 560);
-
-    ctx.fillStyle = '#dddddd';
-    ctx.font = '34px serif';
-    ctx.fillText(`Member ${member.guild.memberCount}`, 300, 230);
-
-    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
+    const attachment = new AttachmentBuilder(imageBuffer, {
       name: 'welcome.png'
     });
 
