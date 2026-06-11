@@ -133,9 +133,9 @@ client.on('guildMemberAdd', async (member) => {
     ctx.font = '34px Arial';
     ctx.fillText(`Member ${member.guild.memberCount}`, 300, 205);
 
-    const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), {
-      name: 'welcome.png'
-    });
+    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
+  name: 'welcome.png'
+});
 
     await channel.send({
       content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
