@@ -130,7 +130,9 @@ client.on('guildMemberAdd', async (member) => {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 52px Arial';
     ctx.fillText('Welcome to', 300, 70);
-
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px Arial';
+    ctx.fillText('TEST', 300, 150);
     ctx.fillStyle = '#8c52ff';
     ctx.font = 'bold 44px Arial';
     ctx.fillText(member.guild.name, 300, 135, 560);
