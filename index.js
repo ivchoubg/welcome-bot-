@@ -88,11 +88,6 @@ client.once('ready', async () => {
   } catch (err) {
     console.error('Slash command register error:', err);
   }
-
-  client.user.setPresence({
-    activities: [{ name: 'Helping Ivchouu_', type: 0 }],
-    status: 'online'
-  });
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -122,33 +117,38 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x241b35ff);
 
-    // Main border like Invite Tracker
-    drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 6);
+    // Border
+    drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 5);
 
-    // Avatar
+    // Avatar circle
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(145, 145);
+    avatar.resize(140, 140);
     makeCircle(avatar);
 
-    const avatarWhite = new Jimp(170, 170, 0xffffffff);
-    makeCircle(avatarWhite);
+    const whiteCircle = new Jimp(160, 160, 0xffffffff);
+    makeCircle(whiteCircle);
 
-    const avatarDark = new Jimp(158, 158, 0x241b35ff);
-    makeCircle(avatarDark);
+    const darkCircle = new Jimp(150, 150, 0x241b35ff);
+    makeCircle(darkCircle);
 
-    image.composite(avatarWhite, 58, 65);
-    image.composite(avatarDark, 64, 71);
-    image.composite(avatar, 70, 77);
+    image.composite(whiteCircle, 60, 70);
+    image.composite(darkCircle, 65, 75);
+    image.composite(avatar, 70, 80);
 
     // Fonts
-    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    // Text like Invite Tracker
-    image.print(fontName, 260, 58, member.user.username, 590);
-    image.print(fontText, 260, 140, `Welcome to ${member.guild.name}!`, 590);
-    image.print(fontText, 260, 192, `Member ${member.guild.memberCount}`, 590);
+    // Text like Invite Tracker, без username
+    image.print(fontBig, 260, 55, 'Welcome to', 590);
+
+    image.print(fontText, 260, 135, {
+      text: member.guild.name,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
+    }, 590, 70);
+
+    image.print(fontText, 260, 215, `Member ${member.guild.memberCount}`, 590);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
