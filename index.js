@@ -7,7 +7,9 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSansBold');
+GlobalFonts.registerFromPath('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'DejaVuSans');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
