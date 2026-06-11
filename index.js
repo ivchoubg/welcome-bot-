@@ -1,10 +1,24 @@
 const express = require('express');
-const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
+const fs = require('fs');
+const { Client, GatewayIntentBits, AttachmentBuilder, SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
-app.get('/', (req, res) => res.send('Bot is alive'));
+app.get('/', (req, res) => res.send('Bot is alive!'));
 app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
+
+const SETTINGS_FILE = './welcomeChannels.json';
+
+function loadSettings() {
+  if (!fs.existsSync(SETTINGS_FILE)) return {};
+  return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+}
+
+function saveSettings(data) {
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+let welcomeChannels = loadSettings();
 
 const client = new Client({
   intents: [
@@ -13,17 +27,49 @@ const client = new Client({
   ]
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  await client.application.commands.set([
+    new SlashCommandBuilder()
+      .setName('setup')
+      .setDescription('Setup bot systems')
+      .addSubcommand(sub =>
+        sub
+          .setName('welcome')
+          .setDescription('Set this channel as the welcome channel')
+      )
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+      .toJSON()
+  ]);
 
   client.user.setPresence({
     activities: [{ name: 'Helping Ivchouu_', type: 0 }],
     status: 'online'
   });
+
+  console.log('Slash commands registered.');
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
+    welcomeChannels[interaction.guildId] = interaction.channelId;
+    saveSettings(welcomeChannels);
+
+    await interaction.reply({
+      content: `✅ Welcome системата е настроена за ${interaction.channel}.`,
+      ephemeral: true
+    });
+  }
 });
 
 client.on('guildMemberAdd', async (member) => {
-  const channel = member.guild.channels.cache.get(process.env.CHANNEL_ID);
+  const channelId = welcomeChannels[member.guild.id];
+  if (!channelId) return;
+
+  const channel = member.guild.channels.cache.get(channelId);
   if (!channel) return;
 
   const canvas = createCanvas(900, 300);
@@ -58,20 +104,18 @@ client.on('guildMemberAdd', async (member) => {
 
   ctx.fillStyle = '#dddddd';
   ctx.font = '32px Arial';
-  ctx.fillText("Welcome to Ivchou's Community!", 290, 180);
+  ctx.fillText(`Welcome to ${member.guild.name}!`, 290, 180);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = '26px Arial';
-  ctx.fillText(`Member ${member.guild.memberCount}`, 290, 225);
+  ctx.fillText(`Member #${member.guild.memberCount}`, 290, 225);
 
   const attachment = new AttachmentBuilder(await canvas.encode('png'), {
     name: 'welcome.png'
   });
 
   await channel.send({
-    content: `🎉 **Добре дошъл/ла, ${member}, в Ivchou's Community!**
-**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**
-**За да имаш достъп до всички канали погледни <#1504460243441029203> !**`,
+    content: `✨ Добре дошъл/ла, ${member}, в **${member.guild.name}**!\n**Вече сме ${member.guild.memberCount} човека! 🔥**`,
     files: [attachment]
   });
 });
