@@ -76,7 +76,9 @@ client.once('ready', async () => {
         .setName('setup')
         .setDescription('Setup bot systems')
         .addSubcommand(sub =>
-          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
+          sub
+            .setName('welcome')
+            .setDescription('Set this channel as the welcome channel')
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
@@ -91,7 +93,10 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
+  if (
+    interaction.commandName === 'setup' &&
+    interaction.options.getSubcommand() === 'welcome'
+  ) {
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -129,25 +134,25 @@ client.on('guildMemberAdd', async (member) => {
     image.composite(darkCircle, 65, 75);
     image.composite(avatar, 70, 80);
 
-    const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    const username = member.user.username.toUpperCase();
-    const serverName = member.guild.name.toUpperCase();
+    const username = member.user.username;
+    const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
-    image.print(fontBig, 260, 50, {
+    image.print(fontName, 260, 65, {
       text: username,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 65);
-
-    image.print(fontText, 260, 125, {
-      text: `Welcome to ${serverName}`,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 45);
 
-    image.print(fontText, 260, 172, {
-      text: `MEMBER ${memberCount}`,
+    image.print(fontText, 260, 120, {
+      text: `Welcome to ${serverName}!`,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
+    }, 590, 45);
+
+    image.print(fontText, 260, 170, {
+      text: `Member ${memberCount}`,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 45);
 
