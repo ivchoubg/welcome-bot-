@@ -63,6 +63,18 @@ async function getNameFont(username) {
   return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
+async function printBoldCompressedName(image, font, text, x, y, width) {
+  const layer = new Jimp(width + 60, 80, 0x00000000);
+
+  layer.print(font, 0, 0, text, width);
+  layer.print(font, 1, 0, text, width);
+  layer.print(font, 0, 1, text, width);
+  layer.print(font, 1, 1, text, width);
+
+  layer.resize(width - 25, 80);
+  image.composite(layer, x, y);
+}
+
 let welcomeChannels = loadSettings();
 
 const client = new Client({
@@ -146,7 +158,8 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    image.print(fontName, 305, 56, username, 540);
+    await printBoldCompressedName(image, fontName, username, 305, 55, 540);
+
     image.print(fontText, 305, 132, `Welcome to ${serverName}!`, 540);
     image.print(fontText, 305, 180, `Member ${memberCount}`, 540);
 
