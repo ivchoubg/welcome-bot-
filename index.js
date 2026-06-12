@@ -1,5 +1,7 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
+const { Resvg } = require('@resvg/resvg-js');
 const {
   Client,
   GatewayIntentBits,
@@ -7,11 +9,9 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
-app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
 
 const SETTINGS_FILE = './welcomeChannels.json';
 
@@ -26,6 +26,215 @@ function loadSettings() {
 
 function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+function fitFontSize(text, maxSize, minSize, maxWidth, factor = 0.56) {
+  const size = Math.floor(maxWidth / Math.max(text.length * factor, 1));
+  return Math.max(minSize, Math.min(maxSize, size));
+}
+
+async function imageToDataUrl(url) {
+  const res = await fetch(url);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  return `data:image/png;base64,${buffer.toString('base64')}`;
+}
+
+let satoriCache = null;
+async function getSatori() {
+  if (!satoriCache) {
+    satoriCache = (await import('satori')).default;
+  }
+  return satoriCache;
+}
+
+let fontsCache = null;
+function getFonts() {
+  if (fontsCache) return fontsCache;
+
+  const fontDir = path.join(
+    path.dirname(require.resolve('@fontsource/montserrat/package.json')),
+    'files'
+  );
+
+  const montserrat800 = fs.readFileSync(
+    path.join(fontDir, 'montserrat-latin-800-normal.woff')
+  );
+
+  const montserrat600 = fs.readFileSync(
+    path.join(fontDir, 'montserrat-latin-600-normal.woff')
+  );
+
+  const montserrat500 = fs.readFileSync(
+    path.join(fontDir, 'montserrat-latin-500-normal.woff')
+  );
+
+  fontsCache = [
+    {
+      name: 'Montserrat',
+      data: montserrat800,
+      weight: 800,
+      style: 'normal'
+    },
+    {
+      name: 'Montserrat',
+      data: montserrat600,
+      weight: 600,
+      style: 'normal'
+    },
+    {
+      name: 'Montserrat',
+      data: montserrat500,
+      weight: 500,
+      style: 'normal'
+    }
+  ];
+
+  return fontsCache;
+}
+
+async function createWelcomeCard(member) {
+  const satori = await getSatori();
+
+  const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
+  const avatarDataUrl = await imageToDataUrl(avatarUrl);
+
+  const username = member.user.username;
+  const serverName = member.guild.name;
+  const memberCount = member.guild.memberCount;
+
+  const nameSize = fitFontSize(username, 48, 28, 590, 0.55);
+  const welcomeText = `Welcome to ${serverName}!`;
+  const welcomeSize = fitFontSize(welcomeText, 31, 21, 590, 0.52);
+
+  const svg = await satori(
+    {
+      type: 'div',
+      props: {
+        style: {
+          width: '900px',
+          height: '300px',
+          backgroundColor: '#2b2140',
+          border: '5px solid #6f3cff',
+          boxSizing: 'border-box',
+          position: 'relative',
+          display: 'flex',
+          fontFamily: 'Montserrat'
+        },
+        children: [
+          {
+            type: 'div',
+            props: {
+              style: {
+                position: 'absolute',
+                left: '55px',
+                top: '61px',
+                width: '176px',
+                height: '176px',
+                borderRadius: '999px',
+                backgroundColor: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              },
+              children: {
+                type: 'div',
+                props: {
+                  style: {
+                    width: '160px',
+                    height: '160px',
+                    borderRadius: '999px',
+                    backgroundColor: '#2b2140',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden'
+                  },
+                  children: {
+                    type: 'img',
+                    props: {
+                      src: avatarDataUrl,
+                      style: {
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '999px',
+                        objectFit: 'cover'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            type: 'div',
+            props: {
+              style: {
+                position: 'absolute',
+                left: '260px',
+                top: '74px',
+                width: '590px',
+                display: 'flex',
+                flexDirection: 'column'
+              },
+              children: [
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      color: '#ffffff',
+                      fontSize: `${nameSize}px`,
+                      fontWeight: 800,
+                      lineHeight: 1.05,
+                      letterSpacing: '-0.8px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden'
+                    },
+                    children: username
+                  }
+                },
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      color: '#eeeeee',
+                      fontSize: `${welcomeSize}px`,
+                      fontWeight: 500,
+                      lineHeight: 1.25,
+                      marginTop: '12px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden'
+                    },
+                    children: welcomeText
+                  }
+                },
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      color: '#ffffff',
+                      fontSize: '27px',
+                      fontWeight: 600,
+                      lineHeight: 1.2,
+                      marginTop: '10px'
+                    },
+                    children: `Member ${memberCount}`
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      width: 900,
+      height: 300,
+      fonts: getFonts()
+    }
+  );
+
+  const resvg = new Resvg(svg);
+  return resvg.render().asPng();
 }
 
 let welcomeChannels = loadSettings();
@@ -46,11 +255,14 @@ client.once('ready', async () => {
         .setName('setup')
         .setDescription('Setup bot systems')
         .addSubcommand(sub =>
-          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
+          sub
+            .setName('welcome')
+            .setDescription('Set this channel as the welcome channel')
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
     ]);
+
     console.log('Slash commands registered.');
   } catch (err) {
     console.error('Slash command register error:', err);
@@ -65,7 +277,10 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
+  if (
+    interaction.commandName === 'setup' &&
+    interaction.options.getSubcommand() === 'welcome'
+  ) {
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -84,47 +299,9 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const canvas = createCanvas(900, 300);
-    const ctx = canvas.getContext('2d');
+    const imageBuffer = await createWelcomeCard(member);
 
-    ctx.fillStyle = '#2b2140';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#6f3cff';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
-
-    const avatar = await loadImage(
-      member.user.displayAvatarURL({ extension: 'png', size: 256 })
-    );
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(150, 145, 85, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(avatar, 65, 60, 170, 170);
-    ctx.restore();
-
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(150, 145, 88, 0, Math.PI * 2, true);
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText(member.user.username, 290, 125);
-
-    ctx.fillStyle = '#dddddd';
-    ctx.font = '32px Arial';
-    ctx.fillText(`Welcome to ${member.guild.name}!`, 290, 180);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '26px Arial';
-    ctx.fillText(`Member ${member.guild.memberCount}`, 290, 225);
-
-    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
+    const attachment = new AttachmentBuilder(imageBuffer, {
       name: 'welcome.png'
     });
 
@@ -137,6 +314,10 @@ client.on('guildMemberAdd', async (member) => {
   } catch (err) {
     console.error('Welcome error:', err);
   }
+});
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log('Web server running');
 });
 
 client.login(process.env.TOKEN);
