@@ -59,7 +59,7 @@ function makeCircle(img) {
 }
 
 async function getNameFont(username) {
-  if (username.length <= 12) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  if (username.length <= 14) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
   return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
