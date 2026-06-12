@@ -1,6 +1,5 @@
 const express = require('express');
 const fs = require('fs');
-const Jimp = require('jimp');
 const {
   Client,
   GatewayIntentBits,
@@ -8,9 +7,11 @@ const {
   PermissionFlagsBits,
   AttachmentBuilder
 } = require('discord.js');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
+app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
 
 const SETTINGS_FILE = './welcomeChannels.json';
 
@@ -27,61 +28,38 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
-function drawRect(img, x, y, w, h, color, thickness = 4) {
-  for (let i = 0; i < thickness; i++) {
-    for (let xx = x; xx < x + w; xx++) {
-      img.setPixelColor(color, xx, y + i);
-      img.setPixelColor(color, xx, y + h - 1 - i);
-    }
-    for (let yy = y; yy < y + h; yy++) {
-      img.setPixelColor(color, x + i, yy);
-      img.setPixelColor(color, x + w - 1 - i, yy);
-    }
-  }
-}
-
-function makeCircle(img) {
-  const w = img.bitmap.width;
-  const h = img.bitmap.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  const r = Math.min(w, h) / 2;
-
-  img.scan(0, 0, w, h, function (x, y, idx) {
-    const dx = x - cx;
-    const dy = y - cy;
-    if (Math.sqrt(dx * dx + dy * dy) > r) {
-      this.bitmap.data[idx + 3] = 0;
-    }
-  });
-
-  return img;
-}
-
-async function getNameFont(username) {
-  if (username.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-  return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-}
-
 let welcomeChannels = loadSettings();
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers
+  ]
 });
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
-  await client.application.commands.set([
-    new SlashCommandBuilder()
-      .setName('setup')
-      .setDescription('Setup bot systems')
-      .addSubcommand(sub =>
-        sub.setName('welcome').setDescription('Set this channel as the welcome channel')
-      )
-      .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-      .toJSON()
-  ]);
+  try {
+    await client.application.commands.set([
+      new SlashCommandBuilder()
+        .setName('setup')
+        .setDescription('Setup bot systems')
+        .addSubcommand(sub =>
+          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+        .toJSON()
+    ]);
+    console.log('Slash commands registered.');
+  } catch (err) {
+    console.error('Slash command register error:', err);
+  }
+
+  client.user.setPresence({
+    activities: [{ name: 'Helping Ivchouu_', type: 0 }],
+    status: 'online'
+  });
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -106,43 +84,47 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const image = new Jimp(900, 300, 0x2b2140ff);
+    const canvas = createCanvas(900, 300);
+    const ctx = canvas.getContext('2d');
 
-    drawRect(image, 10, 10, 880, 280, 0x6f3cffff, 5);
+    ctx.fillStyle = '#2b2140';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
-    const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(155, 155);
-    makeCircle(avatar);
+    ctx.strokeStyle = '#6f3cff';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
 
-    const whiteCircle = new Jimp(185, 185, 0xffffffff);
-    makeCircle(whiteCircle);
+    const avatar = await loadImage(
+      member.user.displayAvatarURL({ extension: 'png', size: 256 })
+    );
 
-    const darkCircle = new Jimp(172, 172, 0x2b2140ff);
-    makeCircle(darkCircle);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(150, 145, 85, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatar, 65, 60, 170, 170);
+    ctx.restore();
 
-    image.composite(whiteCircle, 48, 58);
-    image.composite(darkCircle, 54, 64);
-    image.composite(avatar, 62, 72);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(150, 145, 88, 0, Math.PI * 2, true);
+    ctx.stroke();
 
-    const username = member.user.username;
-    const serverName = member.guild.name;
-    const memberCount = member.guild.memberCount;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 48px Arial';
+    ctx.fillText(member.user.username, 290, 125);
 
-    const fontName = await getNameFont(username);
-    const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    ctx.fillStyle = '#dddddd';
+    ctx.font = '32px Arial';
+    ctx.fillText(`Welcome to ${member.guild.name}!`, 290, 180);
 
-    // име - по-дебело, но без смачкване
-    image.print(fontName, 255, 62, username, 600);
-    image.print(fontName, 256, 62, username, 600);
-    image.print(fontName, 255, 63, username, 600);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '26px Arial';
+    ctx.fillText(`Member ${member.guild.memberCount}`, 290, 225);
 
-    image.print(fontText, 255, 135, `Welcome to ${serverName}!`, 600);
-    image.print(fontText, 255, 182, `Member ${memberCount}`, 600);
-
-    const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
-
-    const attachment = new AttachmentBuilder(buffer, {
+    const attachment = new AttachmentBuilder(await canvas.encode('png'), {
       name: 'welcome.png'
     });
 
@@ -150,10 +132,11 @@ client.on('guildMemberAdd', async (member) => {
       content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
       files: [attachment]
     });
+
+    console.log('Welcome message sent.');
   } catch (err) {
     console.error('Welcome error:', err);
   }
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
 client.login(process.env.TOKEN);
