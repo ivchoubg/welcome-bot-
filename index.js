@@ -59,8 +59,8 @@ function makeCircle(img) {
 }
 
 async function getNameFont(name) {
-  if (name.length <= 14) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-  if (name.length <= 24) return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+  if (name.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  if (name.length <= 32) return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
   return Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
 }
 
@@ -82,7 +82,9 @@ client.once('ready', async () => {
         .setName('setup')
         .setDescription('Setup bot systems')
         .addSubcommand(sub =>
-          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
+          sub
+            .setName('welcome')
+            .setDescription('Set this channel as the welcome channel')
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
@@ -97,7 +99,10 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
+  if (
+    interaction.commandName === 'setup' &&
+    interaction.options.getSubcommand() === 'welcome'
+  ) {
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -116,24 +121,31 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const image = new Jimp(900, 300, 0x241b35ff);
+    const image = new Jimp(900, 300, 0x2b1f42ff);
 
-    drawRect(image, 20, 20, 860, 260, 0x7b3cffff, 5);
+    // Outer glow/card
+    drawRect(image, 18, 18, 864, 264, 0x4b2a80ff, 10);
+    drawRect(image, 28, 28, 844, 244, 0x8c52ffff, 5);
 
+    // Avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(140, 140);
+    avatar.resize(150, 150);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(160, 160, 0xffffffff);
+    const whiteCircle = new Jimp(170, 170, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(150, 150, 0x241b35ff);
+    const darkCircle = new Jimp(160, 160, 0x2b1f42ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 60, 70);
-    image.composite(darkCircle, 65, 75);
-    image.composite(avatar, 70, 80);
+    const purpleCircle = new Jimp(154, 154, 0x8c52ffff);
+    makeCircle(purpleCircle);
+
+    image.composite(whiteCircle, 55, 65);
+    image.composite(darkCircle, 60, 70);
+    image.composite(purpleCircle, 63, 73);
+    image.composite(avatar, 65, 75);
 
     const username = member.user.username;
     const serverName = member.guild.name;
@@ -142,17 +154,18 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    image.print(fontName, 260, 45, {
+    // Invite Tracker style
+    image.print(fontName, 260, 48, {
       text: username,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 60);
+    }, 590, 72);
 
-    image.print(fontText, 260, 120, {
+    image.print(fontText, 260, 132, {
       text: `Welcome to ${serverName}!`,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 45);
 
-    image.print(fontText, 260, 170, {
+    image.print(fontText, 260, 182, {
       text: `Member ${memberCount}`,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 45);
