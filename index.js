@@ -59,7 +59,7 @@ function makeCircle(img) {
 }
 
 async function getNameFont(username) {
-  if (username.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  if (username.length <= 12) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
   return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
@@ -142,11 +142,9 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    image.print(fontName, 250, 58, username, 610);
-    image.print(fontText, 250, 130, `Welcome to ${serverName}!`, 610);
-    image.print(fontText, 250, 178, `Member ${memberCount}`, 610);
-
-    drawRect(image, 250, 228, 280, 3, 0x8c52ffff, 3);
+    image.print(fontName, 250, 62, username, 610);
+    image.print(fontText, 250, 124, `Welcome to ${serverName}!`, 610);
+    image.print(fontText, 250, 164, `Member ${memberCount}`, 610);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
