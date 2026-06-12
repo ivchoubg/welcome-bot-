@@ -58,9 +58,23 @@ function makeCircle(img) {
   return img;
 }
 
-async function getNameFont(username) {
-  if (username.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-  return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+async function printNameLikeInviteTracker(image, text, x, y, maxWidth) {
+  const bigFont = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  const smallFont = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+
+  if (text.length > 18) {
+    image.print(smallFont, x, y + 8, text, maxWidth);
+    image.print(smallFont, x + 1, y + 8, text, maxWidth);
+    return;
+  }
+
+  const layer = new Jimp(maxWidth, 80, 0x00000000);
+  layer.print(bigFont, 0, 0, text, maxWidth);
+  layer.print(bigFont, 1, 0, text, maxWidth);
+  layer.print(bigFont, 0, 1, text, maxWidth);
+
+  layer.resize(maxWidth, 58);
+  image.composite(layer, x, y);
 }
 
 let welcomeChannels = loadSettings();
@@ -86,8 +100,6 @@ client.once('ready', async () => {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
     ]);
-
-    console.log('Slash commands registered.');
   } catch (err) {
     console.error('Slash command register error:', err);
   }
@@ -117,36 +129,33 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x2b2140ff);
 
-    // border като Invite Tracker
     drawRect(image, 20, 20, 860, 260, 0x6f3cffff, 5);
 
-    // avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(150, 150);
+    avatar.resize(145, 145);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(176, 176, 0xffffffff);
+    const whiteCircle = new Jimp(170, 170, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(162, 162, 0x2b2140ff);
+    const darkCircle = new Jimp(158, 158, 0x2b2140ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 65, 62);
-    image.composite(darkCircle, 72, 69);
-    image.composite(avatar, 78, 75);
+    image.composite(whiteCircle, 58, 65);
+    image.composite(darkCircle, 64, 71);
+    image.composite(avatar, 70, 77);
 
     const username = member.user.username;
     const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
-    const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    // текст като Invite Tracker
-    image.print(fontName, 275, 65, username, 580);
-    image.print(fontText, 275, 140, `Welcome to ${serverName}!`, 580);
-    image.print(fontText, 275, 190, `Member ${memberCount}`, 580);
+    await printNameLikeInviteTracker(image, username, 260, 62, 590);
+
+    image.print(fontText, 260, 138, `Welcome to ${serverName}!`, 590);
+    image.print(fontText, 260, 185, `Member ${memberCount}`, 590);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
