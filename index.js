@@ -58,10 +58,18 @@ function makeCircle(img) {
   return img;
 }
 
-async function getNameFont(name) {
-  if (name.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-  if (name.length <= 32) return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-  return Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+async function getNameFonts(name) {
+  if (name.length <= 18) {
+    return {
+      white: await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE),
+      black: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK)
+    };
+  }
+
+  return {
+    white: await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE),
+    black: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK)
+  };
 }
 
 let welcomeChannels = loadSettings();
@@ -123,11 +131,9 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x2b1f42ff);
 
-    // Outer glow/card
     drawRect(image, 18, 18, 864, 264, 0x4b2a80ff, 10);
     drawRect(image, 28, 28, 844, 244, 0x8c52ffff, 5);
 
-    // Avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
     avatar.resize(150, 150);
@@ -151,24 +157,45 @@ client.on('guildMemberAdd', async (member) => {
     const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
-    const fontName = await getNameFont(username);
-    const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    const nameFonts = await getNameFonts(username);
+    const fontTextWhite = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    const fontTextBlack = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
 
-    // Invite Tracker style
-    image.print(fontName, 260, 48, {
+    const textX = 245;
+    const textWidth = 610;
+
+    // Name shadow + centered name
+    image.print(nameFonts.black, textX + 3, 54 + 3, {
       text: username,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 72);
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 70);
 
-    image.print(fontText, 260, 132, {
+    image.print(nameFonts.white, textX, 54, {
+      text: username,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 70);
+
+    // Welcome shadow + centered text
+    image.print(fontTextBlack, textX + 2, 135 + 2, {
       text: `Welcome to ${serverName}!`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 45);
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 45);
 
-    image.print(fontText, 260, 182, {
+    image.print(fontTextWhite, textX, 135, {
+      text: `Welcome to ${serverName}!`,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 45);
+
+    // Member shadow + centered text
+    image.print(fontTextBlack, textX + 2, 185 + 2, {
       text: `Member ${memberCount}`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 45);
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 45);
+
+    image.print(fontTextWhite, textX, 185, {
+      text: `Member ${memberCount}`,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+    }, textWidth, 45);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
