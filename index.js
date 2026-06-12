@@ -126,7 +126,7 @@ client.on('guildMemberAdd', async (member) => {
 
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(170, 170);
+    avatar.resize(160, 160);
     makeCircle(avatar);
 
     const whiteCircle = new Jimp(184, 184, 0xffffffff);
@@ -135,9 +135,9 @@ client.on('guildMemberAdd', async (member) => {
     const darkCircle = new Jimp(174, 174, 0x2b2140ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 58, 58);
-    image.composite(darkCircle, 63, 63);
-    image.composite(avatar, 65, 65);
+    image.composite(whiteCircle, 65, 58);
+    image.composite(darkCircle, 70, 63);
+    image.composite(avatar, 77, 70);
 
     const username = member.user.username;
     const serverName = member.guild.name;
@@ -146,14 +146,13 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    // по-дебело име
-image.print(fontName, 290, 70, username, 560);
-image.print(fontName, 291, 70, username, 560);
-image.print(fontName, 290, 71, username, 560);
-image.print(fontName, 291, 71, username, 560);
+    // по-дебело име, но не прекалено размазано
+    image.print(fontName, 305, 62, username, 540);
+    image.print(fontName, 306, 62, username, 540);
+    image.print(fontName, 305, 63, username, 540);
 
-image.print(fontText, 290, 145, `Welcome to ${serverName}!`, 560);
-image.print(fontText, 290, 195, `Member ${memberCount}`, 560);
+    image.print(fontText, 305, 132, `Welcome to ${serverName}!`, 540);
+    image.print(fontText, 305, 180, `Member ${memberCount}`, 540);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
