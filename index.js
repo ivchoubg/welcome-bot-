@@ -59,7 +59,7 @@ function makeCircle(img) {
 }
 
 async function getNameFont(username) {
-  if (username.length <= 14) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  if (username.length <= 16) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
   return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
@@ -91,6 +91,11 @@ client.once('ready', async () => {
   } catch (err) {
     console.error('Slash command register error:', err);
   }
+
+  client.user.setPresence({
+    activities: [{ name: 'Helping Ivchouu_', type: 0 }],
+    status: 'online'
+  });
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -115,25 +120,24 @@ client.on('guildMemberAdd', async (member) => {
     const channel = await member.guild.channels.fetch(channelId).catch(() => null);
     if (!channel) return;
 
-    const image = new Jimp(900, 300, 0x241b35ff);
+    const image = new Jimp(900, 300, 0x2b2140ff);
 
-    drawRect(image, 18, 18, 864, 264, 0x4b2a80ff, 10);
-    drawRect(image, 28, 28, 844, 244, 0x8c52ffff, 5);
+    drawRect(image, 12, 12, 876, 276, 0x6f3cffff, 5);
 
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(150, 150);
+    avatar.resize(170, 170);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(176, 176, 0xffffffff);
+    const whiteCircle = new Jimp(184, 184, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(162, 162, 0x241b35ff);
+    const darkCircle = new Jimp(174, 174, 0x2b2140ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 52, 62);
-    image.composite(darkCircle, 59, 69);
-    image.composite(avatar, 65, 75);
+    image.composite(whiteCircle, 58, 58);
+    image.composite(darkCircle, 63, 63);
+    image.composite(avatar, 65, 65);
 
     const username = member.user.username;
     const serverName = member.guild.name;
@@ -142,9 +146,9 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    image.print(fontName, 250, 62, username, 610);
-    image.print(fontText, 250, 124, `Welcome to ${serverName}!`, 610);
-    image.print(fontText, 250, 164, `Member ${memberCount}`, 610);
+    image.print(fontName, 290, 70, username, 560);
+    image.print(fontText, 290, 145, `Welcome to ${serverName}!`, 560);
+    image.print(fontText, 290, 195, `Member ${memberCount}`, 560);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
