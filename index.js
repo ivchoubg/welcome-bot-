@@ -81,9 +81,7 @@ client.once('ready', async () => {
         .setName('setup')
         .setDescription('Setup bot systems')
         .addSubcommand(sub =>
-          sub
-            .setName('welcome')
-            .setDescription('Set this channel as the welcome channel')
+          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
@@ -98,10 +96,7 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (
-    interaction.commandName === 'setup' &&
-    interaction.options.getSubcommand() === 'welcome'
-  ) {
+  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -130,18 +125,15 @@ client.on('guildMemberAdd', async (member) => {
     avatar.resize(150, 150);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(170, 170, 0xffffffff);
+    // изцяло бял кръг
+    const whiteCircle = new Jimp(176, 176, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(160, 160, 0x241b35ff);
+    const darkCircle = new Jimp(162, 162, 0x241b35ff);
     makeCircle(darkCircle);
 
-    const purpleCircle = new Jimp(154, 154, 0x8c52ffff);
-    makeCircle(purpleCircle);
-
-    image.composite(whiteCircle, 55, 65);
-    image.composite(darkCircle, 60, 70);
-    image.composite(purpleCircle, 63, 73);
+    image.composite(whiteCircle, 52, 62);
+    image.composite(darkCircle, 59, 69);
     image.composite(avatar, 65, 75);
 
     const username = member.user.username;
@@ -150,19 +142,12 @@ client.on('guildMemberAdd', async (member) => {
 
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-    const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
 
-    // лек shadow/glow ефект
-    image.print(fontName, 263, 53, username, 590);
+    // чист текст без размазване
     image.print(fontName, 260, 50, username, 590);
+    image.print(fontText, 260, 130, `Welcome to ${serverName}!`, 590);
+    image.print(fontText, 260, 180, `Member ${memberCount}`, 590);
 
-    image.print(fontText, 263, 128, `Welcome to ${serverName}!`, 590);
-    image.print(fontText, 260, 125, `Welcome to ${serverName}!`, 590);
-
-    image.print(fontText, 263, 178, `Member ${memberCount}`, 590);
-    image.print(fontText, 260, 175, `Member ${memberCount}`, 590);
-
-    // малък чист акцент, не текстово лого
     drawRect(image, 260, 232, 280, 3, 0x8c52ffff, 3);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
