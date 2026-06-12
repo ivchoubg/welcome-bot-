@@ -134,14 +134,14 @@ client.on('guildMemberAdd', async (member) => {
     image.composite(darkCircle, 65, 75);
     image.composite(avatar, 70, 80);
 
-    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
     const username = member.user.username;
     const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
-    image.print(fontName, 260, 65, {
+    image.print(fontName, 260, 45, {
       text: username,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, 590, 45);
