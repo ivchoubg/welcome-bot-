@@ -56,34 +56,22 @@ function getFonts() {
     'files'
   );
 
-  const montserrat800 = fs.readFileSync(
-    path.join(fontDir, 'montserrat-latin-800-normal.woff')
-  );
-
-  const montserrat600 = fs.readFileSync(
-    path.join(fontDir, 'montserrat-latin-600-normal.woff')
-  );
-
-  const montserrat500 = fs.readFileSync(
-    path.join(fontDir, 'montserrat-latin-500-normal.woff')
-  );
-
   fontsCache = [
     {
       name: 'Montserrat',
-      data: montserrat800,
+      data: fs.readFileSync(path.join(fontDir, 'montserrat-latin-800-normal.woff')),
       weight: 800,
       style: 'normal'
     },
     {
       name: 'Montserrat',
-      data: montserrat600,
+      data: fs.readFileSync(path.join(fontDir, 'montserrat-latin-600-normal.woff')),
       weight: 600,
       style: 'normal'
     },
     {
       name: 'Montserrat',
-      data: montserrat500,
+      data: fs.readFileSync(path.join(fontDir, 'montserrat-latin-500-normal.woff')),
       weight: 500,
       style: 'normal'
     }
@@ -102,9 +90,9 @@ async function createWelcomeCard(member) {
   const serverName = member.guild.name;
   const memberCount = member.guild.memberCount;
 
-  const nameSize = fitFontSize(username, 48, 28, 590, 0.55);
+  const nameSize = fitFontSize(username, 48, 28, 560, 0.55);
   const welcomeText = `Welcome to ${serverName}!`;
-  const welcomeSize = fitFontSize(welcomeText, 31, 21, 590, 0.52);
+  const welcomeSize = fitFontSize(welcomeText, 30, 21, 560, 0.52);
 
   const svg = await satori(
     {
@@ -127,9 +115,9 @@ async function createWelcomeCard(member) {
               style: {
                 position: 'absolute',
                 left: '55px',
-                top: '61px',
-                width: '176px',
-                height: '176px',
+                top: '52px',
+                width: '196px',
+                height: '196px',
                 borderRadius: '999px',
                 backgroundColor: '#ffffff',
                 display: 'flex',
@@ -140,8 +128,8 @@ async function createWelcomeCard(member) {
                 type: 'div',
                 props: {
                   style: {
-                    width: '160px',
-                    height: '160px',
+                    width: '176px',
+                    height: '176px',
                     borderRadius: '999px',
                     backgroundColor: '#2b2140',
                     display: 'flex',
@@ -154,8 +142,8 @@ async function createWelcomeCard(member) {
                     props: {
                       src: avatarDataUrl,
                       style: {
-                        width: '150px',
-                        height: '150px',
+                        width: '162px',
+                        height: '162px',
                         borderRadius: '999px',
                         objectFit: 'cover'
                       }
@@ -170,9 +158,9 @@ async function createWelcomeCard(member) {
             props: {
               style: {
                 position: 'absolute',
-                left: '260px',
-                top: '74px',
-                width: '590px',
+                left: '285px',
+                top: '72px',
+                width: '560px',
                 display: 'flex',
                 flexDirection: 'column'
               },
@@ -185,7 +173,7 @@ async function createWelcomeCard(member) {
                       fontSize: `${nameSize}px`,
                       fontWeight: 800,
                       lineHeight: 1.05,
-                      letterSpacing: '-0.8px',
+                      letterSpacing: '-0.6px',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden'
                     },
@@ -199,7 +187,7 @@ async function createWelcomeCard(member) {
                       color: '#eeeeee',
                       fontSize: `${welcomeSize}px`,
                       fontWeight: 500,
-                      lineHeight: 1.25,
+                      lineHeight: 1.2,
                       marginTop: '12px',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden'
@@ -212,10 +200,10 @@ async function createWelcomeCard(member) {
                   props: {
                     style: {
                       color: '#ffffff',
-                      fontSize: '27px',
+                      fontSize: '26px',
                       fontWeight: 600,
                       lineHeight: 1.2,
-                      marginTop: '10px'
+                      marginTop: '9px'
                     },
                     children: `Member ${memberCount}`
                   }
