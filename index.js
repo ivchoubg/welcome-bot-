@@ -58,6 +58,12 @@ function makeCircle(img) {
   return img;
 }
 
+async function getNameFont(name) {
+  if (name.length <= 14) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  if (name.length <= 24) return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+  return Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+}
+
 let welcomeChannels = loadSettings();
 
 const client = new Client({
@@ -76,9 +82,7 @@ client.once('ready', async () => {
         .setName('setup')
         .setDescription('Setup bot systems')
         .addSubcommand(sub =>
-          sub
-            .setName('welcome')
-            .setDescription('Set this channel as the welcome channel')
+          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .toJSON()
@@ -93,10 +97,7 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (
-    interaction.commandName === 'setup' &&
-    interaction.options.getSubcommand() === 'welcome'
-  ) {
+  if (interaction.commandName === 'setup' && interaction.options.getSubcommand() === 'welcome') {
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -134,17 +135,17 @@ client.on('guildMemberAdd', async (member) => {
     image.composite(darkCircle, 65, 75);
     image.composite(avatar, 70, 80);
 
-    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-    const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-
     const username = member.user.username;
     const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
+    const fontName = await getNameFont(username);
+    const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+
     image.print(fontName, 260, 45, {
       text: username,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    }, 590, 45);
+    }, 590, 60);
 
     image.print(fontText, 260, 120, {
       text: `Welcome to ${serverName}!`,
