@@ -58,51 +58,30 @@ function makeCircle(img) {
   return img;
 }
 
-async function printNameLikeInviteTracker(image, text, x, y, maxWidth) {
-  const bigFont = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-  const smallFont = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-
-  if (text.length > 18) {
-    image.print(smallFont, x, y + 8, text, maxWidth);
-    image.print(smallFont, x + 1, y + 8, text, maxWidth);
-    return;
-  }
-
-  const layer = new Jimp(maxWidth, 80, 0x00000000);
-  layer.print(bigFont, 0, 0, text, maxWidth);
-  layer.print(bigFont, 1, 0, text, maxWidth);
-  layer.print(bigFont, 0, 1, text, maxWidth);
-
-  layer.resize(maxWidth, 58);
-  image.composite(layer, x, y);
+async function getNameFont(username) {
+  if (username.length <= 18) return Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+  return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
 let welcomeChannels = loadSettings();
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
-  ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
-  try {
-    await client.application.commands.set([
-      new SlashCommandBuilder()
-        .setName('setup')
-        .setDescription('Setup bot systems')
-        .addSubcommand(sub =>
-          sub.setName('welcome').setDescription('Set this channel as the welcome channel')
-        )
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-        .toJSON()
-    ]);
-  } catch (err) {
-    console.error('Slash command register error:', err);
-  }
+  await client.application.commands.set([
+    new SlashCommandBuilder()
+      .setName('setup')
+      .setDescription('Setup bot systems')
+      .addSubcommand(sub =>
+        sub.setName('welcome').setDescription('Set this channel as the welcome channel')
+      )
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+      .toJSON()
+  ]);
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -129,33 +108,37 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x2b2140ff);
 
-    drawRect(image, 20, 20, 860, 260, 0x6f3cffff, 5);
+    drawRect(image, 10, 10, 880, 280, 0x6f3cffff, 5);
 
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(145, 145);
+    avatar.resize(155, 155);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(170, 170, 0xffffffff);
+    const whiteCircle = new Jimp(185, 185, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(158, 158, 0x2b2140ff);
+    const darkCircle = new Jimp(172, 172, 0x2b2140ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 58, 65);
-    image.composite(darkCircle, 64, 71);
-    image.composite(avatar, 70, 77);
+    image.composite(whiteCircle, 48, 58);
+    image.composite(darkCircle, 54, 64);
+    image.composite(avatar, 62, 72);
 
     const username = member.user.username;
     const serverName = member.guild.name;
     const memberCount = member.guild.memberCount;
 
+    const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    await printNameLikeInviteTracker(image, username, 260, 62, 590);
+    // име - по-дебело, но без смачкване
+    image.print(fontName, 255, 62, username, 600);
+    image.print(fontName, 256, 62, username, 600);
+    image.print(fontName, 255, 63, username, 600);
 
-    image.print(fontText, 260, 138, `Welcome to ${serverName}!`, 590);
-    image.print(fontText, 260, 185, `Member ${memberCount}`, 590);
+    image.print(fontText, 255, 135, `Welcome to ${serverName}!`, 600);
+    image.print(fontText, 255, 182, `Member ${memberCount}`, 600);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
@@ -167,15 +150,10 @@ client.on('guildMemberAdd', async (member) => {
       content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
       files: [attachment]
     });
-
-    console.log('Welcome message sent.');
   } catch (err) {
     console.error('Welcome error:', err);
   }
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('Web server running');
-});
-
+app.listen(process.env.PORT || 3000, () => console.log('Web server running'));
 client.login(process.env.TOKEN);
