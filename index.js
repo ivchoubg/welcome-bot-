@@ -146,9 +146,14 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    image.print(fontName, 290, 70, username, 560);
-    image.print(fontText, 290, 145, `Welcome to ${serverName}!`, 560);
-    image.print(fontText, 290, 195, `Member ${memberCount}`, 560);
+    // по-дебело име
+image.print(fontName, 290, 70, username, 560);
+image.print(fontName, 291, 70, username, 560);
+image.print(fontName, 290, 71, username, 560);
+image.print(fontName, 291, 71, username, 560);
+
+image.print(fontText, 290, 145, `Welcome to ${serverName}!`, 560);
+image.print(fontText, 290, 195, `Member ${memberCount}`, 560);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
