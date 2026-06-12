@@ -161,40 +161,37 @@ client.on('guildMemberAdd', async (member) => {
     const fontTextWhite = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
     const fontTextBlack = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
 
-    const textX = 245;
-    const textWidth = 610;
+    const textX = 255;
+    const textWidth = 590;
 
-    // Name shadow + centered name
-    image.print(nameFonts.black, textX + 3, 54 + 3, {
+    image.print(nameFonts.black, textX + 3, 50 + 3, {
       text: username,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 70);
 
-    image.print(nameFonts.white, textX, 54, {
+    image.print(nameFonts.white, textX, 50, {
       text: username,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 70);
 
-    // Welcome shadow + centered text
-    image.print(fontTextBlack, textX + 2, 135 + 2, {
+    image.print(fontTextBlack, textX + 2, 125 + 2, {
       text: `Welcome to ${serverName}!`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 45);
 
-    image.print(fontTextWhite, textX, 135, {
+    image.print(fontTextWhite, textX, 125, {
       text: `Welcome to ${serverName}!`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 45);
 
-    // Member shadow + centered text
-    image.print(fontTextBlack, textX + 2, 185 + 2, {
+    image.print(fontTextBlack, textX + 2, 172 + 2, {
       text: `Member ${memberCount}`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 45);
 
-    image.print(fontTextWhite, textX, 185, {
+    image.print(fontTextWhite, textX, 172, {
       text: `Member ${memberCount}`,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     }, textWidth, 45);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
