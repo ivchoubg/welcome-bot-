@@ -63,18 +63,6 @@ async function getNameFont(username) {
   return Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 }
 
-async function printBoldCompressedName(image, font, text, x, y, width) {
-  const layer = new Jimp(width + 60, 80, 0x00000000);
-
-  layer.print(font, 0, 0, text, width);
-  layer.print(font, 1, 0, text, width);
-  layer.print(font, 0, 1, text, width);
-  layer.print(font, 1, 1, text, width);
-
-  layer.resize(width - 25, 80);
-  image.composite(layer, x, y);
-}
-
 let welcomeChannels = loadSettings();
 
 const client = new Client({
@@ -103,11 +91,6 @@ client.once('ready', async () => {
   } catch (err) {
     console.error('Slash command register error:', err);
   }
-
-  client.user.setPresence({
-    activities: [{ name: 'Helping Ivchouu_', type: 0 }],
-    status: 'online'
-  });
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -134,22 +117,24 @@ client.on('guildMemberAdd', async (member) => {
 
     const image = new Jimp(900, 300, 0x2b2140ff);
 
-    drawRect(image, 12, 12, 876, 276, 0x6f3cffff, 5);
+    // border като Invite Tracker
+    drawRect(image, 20, 20, 860, 260, 0x6f3cffff, 5);
 
+    // avatar
     const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 256 });
     const avatar = await Jimp.read(avatarUrl);
-    avatar.resize(160, 160);
+    avatar.resize(150, 150);
     makeCircle(avatar);
 
-    const whiteCircle = new Jimp(184, 184, 0xffffffff);
+    const whiteCircle = new Jimp(176, 176, 0xffffffff);
     makeCircle(whiteCircle);
 
-    const darkCircle = new Jimp(174, 174, 0x2b2140ff);
+    const darkCircle = new Jimp(162, 162, 0x2b2140ff);
     makeCircle(darkCircle);
 
-    image.composite(whiteCircle, 65, 58);
-    image.composite(darkCircle, 70, 63);
-    image.composite(avatar, 77, 70);
+    image.composite(whiteCircle, 65, 62);
+    image.composite(darkCircle, 72, 69);
+    image.composite(avatar, 78, 75);
 
     const username = member.user.username;
     const serverName = member.guild.name;
@@ -158,10 +143,10 @@ client.on('guildMemberAdd', async (member) => {
     const fontName = await getNameFont(username);
     const fontText = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
 
-    await printBoldCompressedName(image, fontName, username, 305, 55, 540);
-
-    image.print(fontText, 305, 132, `Welcome to ${serverName}!`, 540);
-    image.print(fontText, 305, 180, `Member ${memberCount}`, 540);
+    // текст като Invite Tracker
+    image.print(fontName, 275, 65, username, 580);
+    image.print(fontText, 275, 140, `Welcome to ${serverName}!`, 580);
+    image.print(fontText, 275, 190, `Member ${memberCount}`, 580);
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
