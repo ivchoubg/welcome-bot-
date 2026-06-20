@@ -7,13 +7,15 @@ const {
   GatewayIntentBits,
   SlashCommandBuilder,
   PermissionFlagsBits,
-  AttachmentBuilder
+  AttachmentBuilder,
+  EmbedBuilder
 } = require('discord.js');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
 
 const SETTINGS_FILE = './welcomeChannels.json';
+const ALLOWED_GUILD_ID = process.env.ALLOWED_GUILD_ID || null;
 
 function loadSettings() {
   try {
@@ -80,6 +82,10 @@ function getFonts() {
   return fontsCache;
 }
 
+/*
+  НЕ ПИПАМЕ СНИМКАТА.
+  Това е welcome card generation частта.
+*/
 async function createWelcomeCard(member) {
   const satori = await getSatori();
 
@@ -225,6 +231,16 @@ async function createWelcomeCard(member) {
   return resvg.render().asPng();
 }
 
+function channelMentionByName(guild, keywords, fallbackName) {
+  const channel = guild.channels.cache.find(ch => {
+    if (!ch.name) return false;
+    const name = ch.name.toLowerCase();
+    return keywords.some(k => name.includes(k.toLowerCase()));
+  });
+
+  return channel ? `<#${channel.id}>` : fallbackName;
+}
+
 let welcomeChannels = loadSettings();
 
 const client = new Client({
@@ -269,6 +285,14 @@ client.on('interactionCreate', async (interaction) => {
     interaction.commandName === 'setup' &&
     interaction.options.getSubcommand() === 'welcome'
   ) {
+    if (ALLOWED_GUILD_ID && interaction.guildId !== ALLOWED_GUILD_ID) {
+      await interaction.reply({
+        content: '❌ Този бот е private и не може да се настройва в този сървър.',
+        ephemeral: true
+      });
+      return;
+    }
+
     welcomeChannels[interaction.guildId] = interaction.channelId;
     saveSettings(welcomeChannels);
 
@@ -281,6 +305,8 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('guildMemberAdd', async (member) => {
   try {
+    if (ALLOWED_GUILD_ID && member.guild.id !== ALLOWED_GUILD_ID) return;
+
     const channelId = welcomeChannels[member.guild.id];
     if (!channelId) return;
 
@@ -293,8 +319,38 @@ client.on('guildMemberAdd', async (member) => {
       name: 'welcome.png'
     });
 
+    const verification = channelMentionByName(member.guild, ['verification'], '#verification');
+    const rules = channelMentionByName(member.guild, ['rules'], '#rules');
+    const chat = channelMentionByName(member.guild, ['chat'], '#chat');
+    const roles = channelMentionByName(member.guild, ['roles'], '#roles');
+    const photos = channelMentionByName(member.guild, ['photos', 'clips'], '#photos-and-clips');
+
+    const welcomeEmbed = new EmbedBuilder()
+      .setColor(0x2b2d31)
+      .setTitle('📌 Започни оттук')
+      .setDescription(
+        `• ✅ **Verification**\n` +
+        `Виж ${verification}, за да отключиш всички канали.\n\n` +
+
+        `• 📜 **Правилата на сървъра**\n` +
+        `Прочети правилата в ${rules}, за да няма обърквания.\n\n` +
+
+        `• 💬 **Главен чат на сървъра**\n` +
+        `Започни от ${chat} и се запознай с хората.\n\n` +
+
+        `• 👑 **Роли на сървъра**\n` +
+        `Избери си роли от ${roles}.\n\n` +
+
+        `• 📸 **Къде да качваш снимки или видеа**\n` +
+        `Качвай снимки, клипове и моменти в ${photos}.`
+      );
+
     await channel.send({
-      content: `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n**Влез и се забавлявай с нас. Ти си ${member.guild.memberCount}-ят член на сървъра! 🔥**`,
+      content:
+        `🎉 **Добре дошъл/ла, ${member}, в ${member.guild.name}!**\n` +
+        `Радваме се, че си тук. Надяваме се да си прекараш добре, да намериш нови хора и да се забавляваш с нас.\n` +
+        `Ти си нашият ${member.guild.memberCount} член! 🔥`,
+      embeds: [welcomeEmbed],
       files: [attachment]
     });
 
